@@ -5,7 +5,11 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.itunes.model.Adiacenza;
+import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -34,10 +38,10 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA2"
-    private ComboBox<?> cmbA2; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
@@ -50,16 +54,65 @@ public class FXMLController {
 
     @FXML
     void doCalcolaAdiacenze(ActionEvent event) {
+    	Album a1 = this.cmbA1.getValue();
+    	if(a1!=null) {
+    		this.txtResult.appendText("Adiacenze dell'album: "+a1.toString()+"\n");
+    		for(Adiacenza a : model.getAd(a1)) {
+    			this.txtResult.appendText(a.toString()+"\n");
+    		}
+    	}else {
+    		this.txtResult.appendText("Inserire un album!\n");
+    	}
     	
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
     	
+    	Album a1 = this.cmbA1.getValue();
+    	Album a2 = this.cmbA2.getValue();
+    	String s = this.txtX.getText();
+    	
+    	try {
+    		int x = Integer.parseInt(s);
+    		
+    		if(a1!=null && a2!=null) {
+        		List<Album> result = model.ricorsione(a1, a2, x);
+        		if(result.size()>0) {
+        			for(Album a : result) {
+        				this.txtResult.appendText(a.toString()+"\n");
+        			}
+        		}else {
+        			this.txtResult.appendText("Non esiste un percorso per gli album selezionati.\n");
+        		}
+        	}else {
+        		this.txtResult.appendText("Inserire un album!\n");
+        	}
+    	}catch(NumberFormatException e) {
+			e.printStackTrace();
+			this.txtResult.appendText("Dati inseriti nel formato sbagliato.");
+		}
+    	
+    	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	
+    	this.cmbA1.getItems().clear();
+    	this.cmbA2.getItems().clear();
+    	
+    	String s = this.txtN.getText();
+    	
+    	try {
+    		int sec = Integer.parseInt(s);
+    		model.creaGrafo(sec);
+    		this.txtResult.appendText("Grafo creato con "+model.getGrafo().vertexSet().size()+ " vertici e "+model.getGrafo().edgeSet().size()+" archi. \n");
+    		this.setCombos();
+    	}catch(NumberFormatException e) {
+			e.printStackTrace();
+			this.txtResult.appendText("Dati inseriti nel formato sbagliato.");
+		}
     	
     }
 
@@ -76,6 +129,11 @@ public class FXMLController {
 
     }
 
+    public void setCombos() {
+    	List<Album> list = model.setCombos();
+    	this.cmbA1.getItems().addAll(list);
+    	this.cmbA2.getItems().addAll(list);
+    }
     
     public void setModel(Model model) {
     	this.model = model;
